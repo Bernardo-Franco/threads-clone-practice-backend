@@ -27,7 +27,7 @@ const createPost = async (req, res) => {
 
     const newPost = new Post({ postedBy, text, img });
     await newPost.save();
-    res.status(201).json({ message: 'Post created successfully', newPost });
+    res.status(201).json(newPost);
   } catch (error) {
     res.status(500).send({ error: error.message });
   }
@@ -115,7 +115,7 @@ const replyToPost = async (req, res) => {
 
     await post.save();
 
-    return res.status(200).send({ message: 'reply successfully saved', post });
+    return res.status(200).send(reply);
   } catch (error) {
     return res.status(500).send({ error: error.message });
   }
@@ -136,7 +136,7 @@ const getFeedPosts = async (req, res) => {
       createdAt: -1,
     });
 
-    return res.status(200).send(feedPosts);
+    return res.status(200).json(feedPosts);
   } catch (error) {
     return res.status(500).send({ error: error.message });
   }
@@ -158,6 +158,28 @@ const getUserPosts = async (req, res) => {
   }
 };
 
+const deleteReply = async (req, res) => {
+  const postId = req.params.postId;
+  const { replyId } = req.body;
+
+  try {
+    await Post.updateOne(
+      { _id: postId },
+      {
+        $pull: {
+          replies: {
+            _id: replyId,
+          },
+        },
+      }
+    );
+    const updatedPost = await Post.findById(postId);
+    res.status(200).json(updatedPost);
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+};
+
 export {
   createPost,
   getPost,
@@ -166,4 +188,5 @@ export {
   replyToPost,
   getFeedPosts,
   getUserPosts,
+  deleteReply,
 };
