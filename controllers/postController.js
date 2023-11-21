@@ -7,30 +7,29 @@ const createPost = async (req, res) => {
     if (!postedBy || !text) {
       return res
         .status(400)
-        .json({ message: 'posted by and text fields are required' });
+        .json({ error: 'posted by and text fields are required' });
     }
     const user = await User.findById(postedBy);
     if (!user) {
-      return res.status(404).json({ message: 'user not found' });
+      return res.status(404).json({ error: 'user not found' });
     }
     if (user._id.toString() !== req.user._id.toString()) {
       return res
         .status(401)
-        .json({ message: 'Unauthorized to create a post for another user' });
+        .json({ error: 'Unauthorized to create a post for another user' });
     }
     const maxLength = 500;
     if (text.length > maxLength) {
       return res
         .status(400)
-        .json({ message: `Text must be less than ${maxLength} characters` });
+        .json({ error: `Text must be less than ${maxLength} characters` });
     }
 
     const newPost = new Post({ postedBy, text, img });
     await newPost.save();
     res.status(201).json({ message: 'Post created successfully', newPost });
   } catch (error) {
-    res.status(500).send({ message: error.message });
-    console.error(error);
+    res.status(500).send({ error: error.message });
   }
 };
 
@@ -40,7 +39,7 @@ const getPost = async (req, res) => {
     if (!post) {
       return res.status(404).json({ error: 'The post does not exist' });
     }
-    res.status(200).json({ post });
+    res.status(200).json(post);
   } catch (error) {
     return res.status(500).send({ error: error.message });
   }
@@ -98,7 +97,7 @@ const replyToPost = async (req, res) => {
     const { text } = req.body;
     const postId = req.params.postId;
     const userId = req.user._id;
-    const profilePic = req.user.profilePic;
+    const userProfilePic = req.user.profilePicture;
     const username = req.user.username;
 
     if (!text) {
@@ -110,7 +109,7 @@ const replyToPost = async (req, res) => {
       return res.status(404).send({ error: 'post not found' });
     }
 
-    const reply = { userId, text, profilePic, username };
+    const reply = { userId, text, userProfilePic, username };
 
     post.replies.push(reply);
 
@@ -137,9 +136,25 @@ const getFeedPosts = async (req, res) => {
       createdAt: -1,
     });
 
-    return res.status(200).send({ feedPosts });
+    return res.status(200).send(feedPosts);
   } catch (error) {
     return res.status(500).send({ error: error.message });
+  }
+};
+
+const getUserPosts = async (req, res) => {
+  const { username } = req.params;
+  try {
+    const user = await User.findOne({ username });
+    if (!user) return res.status(404).json({ error: 'user not found' });
+
+    const posts = await Post.find({ postedBy: user._id }).sort({
+      createdAt: -1,
+    });
+
+    res.status(200).json({ posts });
+  } catch (error) {
+    res.status(500).send({ error: error.message });
   }
 };
 
@@ -150,4 +165,5 @@ export {
   likeUnlikePost,
   replyToPost,
   getFeedPosts,
+  getUserPosts,
 };
