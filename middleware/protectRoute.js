@@ -1,5 +1,6 @@
 import User from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
+
 const protectRoute = async (req, res, next) => {
   try {
     const token = req.cookies.jwt;
@@ -17,4 +18,4 @@ const protectRoute = async (req, res, next) => {
   }
 };
 
-export { protectRoute };
+export default protectRoute;
