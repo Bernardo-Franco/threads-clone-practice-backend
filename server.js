@@ -5,10 +5,10 @@ import cookieParser from 'cookie-parser';
 import userRoutes from './routes/userRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
+import { server, app } from './socket/socket.js';
 dotenv.config();
 connectDB();
 const PORT = process.env.PORT || 5000;
-const app = express();
 
 //Middlewares
 app.use(express.json({ limit: '50mb' })); // to parse Json Data in the req.body -- the 50mb limit is because we are saving imgs in base64 string format
@@ -20,4 +20,4 @@ app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/messages', messageRoutes);
 
-app.listen(PORT, () => console.log(`server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`server running on port ${PORT}`));
